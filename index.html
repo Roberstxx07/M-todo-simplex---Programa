@@ -13,23 +13,23 @@
         <form id="simplexForm">
             <div class="form-group">
                 <label for="objective">Función Objetivo (ej: 3x1 + 2x2):</label>
-                <input type="text" id="objective" placeholder="Ingrese la función objetivo" required>
+                <input type="text" id="objective" name="objective" placeholder="Ingrese la función objetivo" required>
             </div>
 
             <div class="form-group">
                 <label for="constraints">Restricciones (una por línea, ej: x1 + x2 ≤ 10):</label>
-                <textarea id="constraints" placeholder="Ingrese las restricciones" required></textarea>
+                <textarea id="constraints" name="constraints" placeholder="Ingrese las restricciones" required></textarea>
             </div>
 
             <div class="form-group">
                 <label for="type">Seleccione:</label>
-                <select id="type">
+                <select id="type" name="type">
                     <option value="max">Maximizar</option>
                     <option value="min">Minimizar</option>
                 </select>
             </div>
 
-            <button type="submit" id="solveBtn">Resolver</button>
+            <button type="submit" id="solveBtn" class="btn">Resolver</button>
         </form>
 
         <div id="results" class="hidden">
