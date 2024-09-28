@@ -1,127 +1,166 @@
 document.getElementById("simplexForm").addEventListener("submit", function(event) {
-    event.preventDefault();  // Evita que el formulario se envíe
+    event.preventDefault();
 
-    // Recoge los valores del formulario
     const objective = document.getElementById("objective").value;
-    const constraints = document.getElementById("constraints").value.split("\n");
+    const constraints = document.getElementById("constraints").value.split("\n").filter(Boolean); 
     const type = document.getElementById("type").value;
 
-    // Llama a la función para resolver el método Simplex
-    const result = solveSimplex(objective, constraints, type);
+    if (!objective || constraints.length === 0) {
+        alert("Por favor, ingresa la función objetivo y al menos una restricción.");
+        return;
+    }
 
-    // Muestra los resultados
-    document.getElementById("results").classList.remove("hidden");
-    document.getElementById("solutionSteps").textContent = result;
+    try {
+        const result = solveSimplex(objective, constraints, type);
+        document.getElementById("results").classList.remove("hidden");
+        document.getElementById("solutionSteps").textContent = result;
+    } catch (error) {
+        document.getElementById("results").classList.remove("hidden");
+        document.getElementById("solutionSteps").textContent = "Error: " + error.message;
+    }
 });
 
 function solveSimplex(objective, constraints, type) {
-    // 1. Convertir la función objetivo y las restricciones en matrices para el método Simplex.
     let steps = "Función objetivo: " + objective + "\n";
     steps += "Restricciones:\n";
     constraints.forEach((constraint, index) => {
-        steps += `  R${index + 1}: ${constraint}\n`;
+        steps += `  R${index + 1}: ${constraint}\n`;
     });
     steps += `Tipo de optimización: ${type === "max" ? "Maximizar" : "Minimizar"}\n\n`;
-    
-    // 2. Aquí transformamos la función y restricciones en la forma estándar para el Simplex.
-    // Transformar la función objetivo a una matriz adecuada.
+
     let simplexTable = createInitialTable(objective, constraints, type);
-    
     steps += "Tabla inicial del Simplex:\n" + printTable(simplexTable) + "\n";
-    
-    // 3. Realizar el proceso de pivoteo hasta encontrar la solución óptima.
+
     let iterations = 0;
+    const maxIterations = 100;
+
     while (!isOptimal(simplexTable)) {
-        if (iterations > 10) { // Evitar ciclos infinitos en este ejemplo.
-            steps += "El algoritmo ha alcanzado el límite de iteraciones sin encontrar una solución óptima.\n";
-            break;
+        if (iterations >= maxIterations) {
+            throw new Error("Límite de iteraciones alcanzado. Posible problema de no acotación.");
         }
 
-        // Identificar la columna de entrada y la fila de salida.
         const pivotColumn = findPivotColumn(simplexTable);
-        const pivotRow = findPivotRow(simplexTable, pivotColumn);
-
-        if (pivotRow === -1) {
-            steps += "No hay solución factible.\n";
-            break;
+        if (pivotColumn === -1) { 
+            throw new Error("Todas las entradas en la última fila son no negativas. La solución es no acotada."); 
         }
 
-        // Hacer el pivoteo en la tabla.
+        const pivotRow = findPivotRow(simplexTable, pivotColumn);
+        if (pivotRow === -1) {
+            throw new Error("No hay solución factible.");
+        }
+
         simplexTable = pivot(simplexTable, pivotRow, pivotColumn);
         steps += `Iteración ${iterations + 1}:\n` + printTable(simplexTable) + "\n";
         iterations++;
     }
 
-    // 4. Mostrar el resultado final.
     const result = getOptimalResult(simplexTable);
     steps += "\nResultado óptimo:\n" + result;
-
     return steps;
 }
 
-// Función que crea la tabla inicial del Simplex a partir de la función objetivo y restricciones.
 function createInitialTable(objective, constraints, type) {
-    // Por simplicidad, asumimos que las restricciones ya están en forma estándar.
-    // Aquí necesitas descomponer la función objetivo en coeficientes y hacer lo mismo con las restricciones.
-    
-    // Esta tabla sería una matriz que representa los coeficientes de las variables.
-    // Por ejemplo, en el problema max 3x1 + 2x2 con restricciones:
-    // x1 + x2 <= 10
-    // 2x1 + 3x2 <= 20
-    // la tabla podría ser algo como:
-    return [
-        [1, 1, 10],  // Restricción 1
-        [2, 3, 20],  // Restricción 2
-        [-3, -2, 0]  // Función objetivo (negativos para maximizar)
-    ];
+    const numVars = objective.split(/[+-]/).length; // Cuenta las variables en la función objetivo
+    const numConstraints = constraints.length;
+    const numSlackVars = numConstraints; 
+
+    // Crear la tabla inicial llena de ceros
+    let table = Array.from({ length: numConstraints + 1 }, () => Array.from({ length: numVars + numSlackVars + 1 }, () => 0));
+
+    // Llenar la tabla con los coeficientes de las restricciones y variables de holgura
+    for (let i = 0; i < numConstraints; i++) {
+        const constraintParts = constraints[i].split(/[<=]+/); // Separa la restricción en partes
+        const leftSide = constraintParts[0].trim();
+        const rightSide = parseFloat(constraintParts[1].trim());
+
+        const varCoefficients = leftSide.split(/[+-]/).map(term => {
+            const parts = term.trim().split(" ");
+            return parseFloat(parts[0] || 1); // Si no hay coeficiente, asume 1
+        });
+
+        // Llenar los coeficientes de las variables originales
+        for (let j = 0; j < numVars; j++) {
+            table[i][j] = varCoefficients[j] || 0; // Si la variable no está presente, asume coeficiente 0
+        }
+
+        // Llenar los coeficientes de las variables de holgura (matriz identidad)
+        table[i][numVars + i] = 1; 
+
+        // Llenar el término independiente
+        table[i][numVars + numSlackVars] = rightSide;
+    }
+
+    // Llenar la última fila con los coeficientes de la función objetivo (negados si es maximización)
+    const objectiveCoefficients = objective.split(/[+-]/).map(term => {
+        const parts = term.trim().split(" ");
+        const coefficient = parseFloat(parts[0] || 1);
+        return type === "max" ? -coefficient : coefficient; 
+    });
+
+    for (let j = 0; j < numVars; j++) {
+        table[numConstraints][j] = objectiveCoefficients[j] || 0;
+    }
+
+    return table;
 }
 
-// Función para imprimir la tabla en formato legible.
 function printTable(table) {
     let output = '';
     table.forEach(row => {
-        output += row.join('  ') + '\n';
+        output += row.map(val => val.toFixed(2)).join('  ') + '\n'; // Formatear a dos decimales
     });
     return output;
 }
 
-// Función que verifica si ya se alcanzó la solución óptima.
 function isOptimal(table) {
-    // Si todos los valores en la fila de la función objetivo son no negativos, ya hemos alcanzado el óptimo.
     const lastRow = table[table.length - 1];
     return lastRow.slice(0, -1).every(val => val >= 0);
 }
 
-// Función que encuentra la columna de entrada (la que tiene el valor más negativo en la función objetivo).
 function findPivotColumn(table) {
     const lastRow = table[table.length - 1];
-    return lastRow.slice(0, -1).indexOf(Math.min(...lastRow.slice(0, -1)));
+    let mostNegative = 0;
+    let pivotColumn = -1;
+    for (let i = 0; i < lastRow.length - 1; i++) {
+        if (lastRow[i] < mostNegative) {
+            mostNegative = lastRow[i];
+            pivotColumn = i;
+        }
+    }
+    return pivotColumn;
 }
 
-// Función que encuentra la fila de salida usando el cociente mínimo (regla de Bland).
 function findPivotRow(table, pivotColumn) {
-    let ratios = table.slice(0, -1).map(row => {
-        const val = row[pivotColumn];
-        return val > 0 ? row[row.length - 1] / val : Infinity;
-    });
-    const minRatio = Math.min(...ratios);
-    return minRatio === Infinity ? -1 : ratios.indexOf(minRatio);
-}
-
-// Función que realiza el pivoteo de la tabla.
-function pivot(table, pivotRow, pivotColumn) {
-    const newTable = table.map(row => row.slice());  // Clonar la tabla.
-
-    const pivotValue = table[pivotRow][pivotColumn];
-    for (let j = 0; j < newTable[pivotRow].length; j++) {
-        newTable[pivotRow][j] /= pivotValue;
+    let ratios = [];
+    for (let i = 0; i < table.length - 1; i++) {
+        const val = table[i][pivotColumn];
+        ratios.push(val > 0 ? table[i][table[0].length - 1] / val : Infinity);
     }
 
-    for (let i = 0; i < newTable.length; i++) {
+    let minRatio = Infinity;
+    let pivotRow = -1;
+    for (let i = 0; i < ratios.length; i++) {
+        if (ratios[i] > 0 && ratios[i] < minRatio) {
+            minRatio = ratios[i];
+            pivotRow = i;
+        }
+    }
+    return pivotRow;
+}
+
+function pivot(table, pivotRow, pivotColumn) {
+    const newTable = table.map(row => row.slice());
+    const pivotValue = table[pivotRow][pivotColumn];
+
+    // Divide la fila pivote por el valor pivote
+    newTable[pivotRow] = newTable[pivotRow].map(val => val / pivotValue);
+
+    // Realiza las operaciones de fila para hacer cero los demás elementos en la columna pivote
+    for (let i = 0; i < table.length; i++) {
         if (i !== pivotRow) {
             const factor = table[i][pivotColumn];
-            for (let j = 0; j < newTable[i].length; j++) {
-                newTable[i][j] -= factor * newTable[pivotRow][j];
+            for (let j = 0; j < table[0].length; j++) {
+                newTable[i][j] = table[i][j] - factor * newTable[pivotRow][j];
             }
         }
     }
@@ -129,15 +168,8 @@ function pivot(table, pivotRow, pivotColumn) {
     return newTable;
 }
 
-// Función que obtiene los resultados óptimos después de resolver el Simplex.
 function getOptimalResult(table) {
-    const variables = ['x1', 'x2'];  // Suponer que tenemos dos variables.
-    let result = '';
-    for (let i = 0; i < variables.length; i++) {
-        let val = table[i][table[0].length - 1];
-        result += `${variables[i]} = ${val}\n`;
-    }
-    const optimalValue = table[table.length - 1][table[0].length - 1];
-    result += `Valor óptimo de la función objetivo: ${optimalValue}\n`;
-    return result;
+    const lastRow = table[table.length - 1];
+    const optimalValue = lastRow[lastRow.length - 1];
+    return "Valor óptimo: " + optimalValue.toFixed(2); 
 }
