@@ -62,19 +62,54 @@ function solveSimplex(objective, constraints, type) {
 function createInitialTable(objective, constraints, type) {
     const numVars = objective.split(/[+-]/).length; // Cuenta las variables en la función objetivo
     const numConstraints = constraints.length;
-    const numSlackVars = numConstraints; 
+    let numSlackVars = 0; // Contador para variables de holgura
+    let numExcessVars = 0; // Contador para variables de exceso
+
+    // Determinar cuántas variables de holgura y exceso se necesitan
+    constraints.forEach(constraint => {
+        if (constraint.includes("<=")) {
+            numSlackVars++; // Holgura para "<="
+        } else if (constraint.includes(">=")) {
+            numExcessVars++; // Exceso para ">="
+        }
+    });
 
     // Crear la tabla inicial llena de ceros
-    let table = Array.from({ length: numConstraints + 1 }, () => Array.from({ length: numVars + numSlackVars + 1 }, () => 0));
+    let table = Array.from({ length: numConstraints + 1 }, () => 
+        Array.from({ length: numVars + numSlackVars + numExcessVars + 1 }, () => 0)
+    );
 
-    // Llenar la tabla con los coeficientes de las restricciones y variables de holgura
+    // Llenar la tabla con los coeficientes de las restricciones y variables de holgura/exceso
+    let slackVarIndex = numVars; // Índice para variables de holgura
+    let excessVarIndex = numVars + numSlackVars; // Índice para variables de exceso
+
     for (let i = 0; i < numConstraints; i++) {
-        const constraintParts = constraints[i].split(/[<=]+/); // Separa la restricción en partes
-        const leftSide = constraintParts[0].trim();
-        const rightSide = parseFloat(constraintParts[1].trim());
+        // Validar que la restricción no sea undefined antes de usar trim()
+        const constraint = constraints[i];
+        if (!constraint) {
+            throw new Error("Restricción no válida en la posición: " + (i + 1));
+        }
 
+        // Convertir las variables a minúsculas para evitar problemas con mayúsculas
+        const constraintLower = constraint.toLowerCase();
+
+        const constraintParts = constraintLower.split(/[<=]+|>=+|=+/); // Separa la restricción en partes
+
+        // Validar que constraintParts tenga al menos 2 partes
+        if (constraintParts.length < 2) {
+            throw new Error("Error al procesar la restricción en la posición: " + (i + 1));
+        }
+
+        const leftSide = constraintParts[0] ? constraintParts[0].trim() : null; // Lado izquierdo de la restricción
+        const rightSide = constraintParts[1] ? parseFloat(constraintParts[1].trim()) : null; // Término independiente (lado derecho)
+
+        if (!leftSide || isNaN(rightSide)) {
+            throw new Error("Restricción no válida en la posición: " + (i + 1));
+        }
+
+        // Dividir los coeficientes y variables, y asegurarnos de que no haya espacios
         const varCoefficients = leftSide.split(/[+-]/).map(term => {
-            const parts = term.trim().split(" ");
+            const parts = term.trim().split(/(\d+)/).filter(Boolean); // Divide el coeficiente de la variable
             return parseFloat(parts[0] || 1); // Si no hay coeficiente, asume 1
         });
 
@@ -83,11 +118,17 @@ function createInitialTable(objective, constraints, type) {
             table[i][j] = varCoefficients[j] || 0; // Si la variable no está presente, asume coeficiente 0
         }
 
-        // Llenar los coeficientes de las variables de holgura (matriz identidad)
-        table[i][numVars + i] = 1; 
+        // Ajustar según el tipo de restricción
+        if (constraint.includes("<=")) {
+            // Variable de holgura
+            table[i][slackVarIndex++] = 1;
+        } else if (constraint.includes(">=")) {
+            // Variable de exceso
+            table[i][excessVarIndex++] = -1;
+        }
 
         // Llenar el término independiente
-        table[i][numVars + numSlackVars] = rightSide;
+        table[i][numVars + numSlackVars + numExcessVars] = rightSide;
     }
 
     // Llenar la última fila con los coeficientes de la función objetivo (negados si es maximización)
@@ -103,6 +144,7 @@ function createInitialTable(objective, constraints, type) {
 
     return table;
 }
+
 
 function printTable(table) {
     let output = '';
