@@ -297,4 +297,3 @@ function getOptimalResult(table) {
     return result;
 }
 
-
