@@ -1,8 +1,8 @@
-document.getElementById("simplexForm").addEventListener("submit", function(event) {
+document.getElementById("simplexForm").addEventListener("submit", function (event) {
     event.preventDefault();
 
     const objective = sanitizeInput(document.getElementById("objective").value);
-    const constraints = document.getElementById("constraints").value.split("\n").filter(Boolean).map(sanitizeInput); 
+    const constraints = document.getElementById("constraints").value.split("\n").filter(Boolean).map(sanitizeInput);
     const type = document.getElementById("type").value;
 
     if (!objective || constraints.length === 0) {
@@ -21,9 +21,17 @@ document.getElementById("simplexForm").addEventListener("submit", function(event
 });
 
 function sanitizeInput(input) {
-    return input.replace(/\s+/g, ''); // Elimina todos los espacios en blanco
+    // Reemplazar caracteres "≤" por "<=" y "≥" por ">="
+    input = input.replace(/≤/g, '<=');
+    input = input.replace(/≥/g, '>=');
+    // Eliminar espacios en blanco
+    return input.replace(/\s+/g, ''); 
 }
 
+// El resto del código permanece igual
+
+
+// Función principal para resolver Simplex en dos fases
 function solveSimplex(objective, constraints, type) {
     let steps = "Función objetivo: " + objective + "\n";
     steps += "Restricciones:\n";
@@ -32,20 +40,22 @@ function solveSimplex(objective, constraints, type) {
     });
     steps += `Tipo de optimización: ${type === "max" ? "Maximizar" : "Minimizar"}\n\n`;
 
-    let simplexTable = createInitialTable(objective, constraints, type);
-    steps += "Tabla inicial del Simplex:\n" + printTable(simplexTable) + "\n";
+    // Fase 1: Resolver el problema auxiliar con variables artificiales
+    let simplexTable = createInitialTable(objective, constraints, type, true);
+    steps += "Fase 1 - Tabla inicial del Simplex (con variables artificiales):\n" + printTable(simplexTable) + "\n";
 
     let iterations = 0;
     const maxIterations = 100;
 
+    // Iteraciones para la Fase 1
     while (!isOptimal(simplexTable)) {
         if (iterations >= maxIterations) {
             throw new Error("Límite de iteraciones alcanzado. Posible problema de no acotación.");
         }
 
         const pivotColumn = findPivotColumn(simplexTable);
-        if (pivotColumn === -1) { 
-            throw new Error("Todas las entradas en la última fila son no negativas. La solución es no acotada."); 
+        if (pivotColumn === -1) {
+            throw new Error("Solución no acotada.");
         }
 
         const pivotRow = findPivotRow(simplexTable, pivotColumn);
@@ -54,7 +64,34 @@ function solveSimplex(objective, constraints, type) {
         }
 
         simplexTable = pivot(simplexTable, pivotRow, pivotColumn);
-        steps += `Iteración ${iterations + 1}:\n` + printTable(simplexTable) + "\n";
+        steps += `Iteración ${iterations + 1} (Fase 1):\n` + printTable(simplexTable) + "\n";
+        iterations++;
+    }
+
+    // Fase 2: Resolver con la función objetivo original
+    steps += "Fase 1 completada. Variables artificiales eliminadas.\n";
+    simplexTable = createInitialTable(objective, constraints, type, false);
+    steps += "Fase 2 - Resolviendo con la función objetivo original:\n" + printTable(simplexTable) + "\n";
+
+    // Iteraciones para la Fase 2
+    iterations = 0;
+    while (!isOptimal(simplexTable)) {
+        if (iterations >= maxIterations) {
+            throw new Error("Límite de iteraciones alcanzado. Posible problema de no acotación.");
+        }
+
+        const pivotColumn = findPivotColumn(simplexTable);
+        if (pivotColumn === -1) {
+            throw new Error("Solución no acotada.");
+        }
+
+        const pivotRow = findPivotRow(simplexTable, pivotColumn);
+        if (pivotRow === -1) {
+            throw new Error("No hay solución factible.");
+        }
+
+        simplexTable = pivot(simplexTable, pivotRow, pivotColumn);
+        steps += `Iteración ${iterations + 1} (Fase 2):\n` + printTable(simplexTable) + "\n";
         iterations++;
     }
 
@@ -63,26 +100,32 @@ function solveSimplex(objective, constraints, type) {
     return steps;
 }
 
-function createInitialTable(objective, constraints, type) {
+// Función modificada para crear la tabla inicial, diferenciando Fase 1 y Fase 2
+function createInitialTable(objective, constraints, type, isPhaseOne) {
     const numVars = getVariableNames(objective, constraints).length; // Variables en la función objetivo
     const numConstraints = constraints.length;
     let numSlackVars = 0; // Variables de holgura
     let numExcessVars = 0; // Variables de exceso
+    let numArtificialVars = 0; // Variables artificiales
 
     constraints.forEach(constraint => {
         if (constraint.includes("<=")) {
             numSlackVars++; // Holgura para "<="
         } else if (constraint.includes(">=")) {
             numExcessVars++; // Exceso para ">="
+            numArtificialVars++; // Variable artificial para ">="
+        } else if (constraint.includes("=")) {
+            numArtificialVars++; // Variable artificial para "="
         }
     });
 
-    let table = Array.from({ length: numConstraints + 1 }, () => 
-        Array.from({ length: numVars + numSlackVars + numExcessVars + 1 }, () => 0)
+    let table = Array.from({ length: numConstraints + 1 }, () =>
+        Array.from({ length: numVars + numSlackVars + numExcessVars + numArtificialVars + 1 }, () => 0)
     );
 
     let slackVarIndex = numVars; // Índice de variables de holgura
     let excessVarIndex = numVars + numSlackVars; // Índice de variables de exceso
+    let artificialVarIndex = numVars + numSlackVars + numExcessVars; // Índice de variables artificiales
 
     for (let i = 0; i < numConstraints; i++) {
         const constraint = constraints[i];
@@ -91,8 +134,19 @@ function createInitialTable(objective, constraints, type) {
         }
 
         const constraintLower = constraint.toLowerCase();
-        const constraintParts = constraintLower.split(/[≤=]+|>=+/); 
 
+        let operator;
+        if (constraint.includes("<=")) {
+            operator = "<=";
+        } else if (constraint.includes(">=")) {
+            operator = ">=";
+        } else if (constraint.includes("=")) {
+            operator = "=";
+        } else {
+            throw new Error("Operador no válido en la restricción en la posición: " + (i + 1));
+        }
+
+        const constraintParts = constraint.split(operator);
         if (constraintParts.length < 2) {
             throw new Error("Error al procesar la restricción en la posición: " + (i + 1));
         }
@@ -104,52 +158,66 @@ function createInitialTable(objective, constraints, type) {
             throw new Error("Restricción no válida en la posición: " + (i + 1));
         }
 
-        const varCoefficients = leftSide.split(/[+-]/).map(term => {
-            const parts = term.trim().split(/(\d+)/).filter(Boolean); 
-            return parseFloat(parts[0] || 1); 
+        const varCoefficients = leftSide.match(/[+-]?(\d+(?:\.\d+)?|\b)[a-zA-Z](?:\d+)?/g).map(term => {
+            const parts = term.match(/[+-]?(\d+(?:\.\d+)?)?/);
+            return parseFloat(parts[0] || 1);
         });
 
         for (let j = 0; j < numVars; j++) {
             table[i][j] = varCoefficients[j] || 0;
         }
 
-        if (constraint.includes("≤") || constraint.includes("<=")) {
-            table[i][slackVarIndex++] = 1;
-        } else if (constraint.includes(">=")) {
-            table[i][excessVarIndex++] = -1;
+        if (operator === "<=") {
+            table[i][slackVarIndex++] = 1; // Variable de holgura
+        } else if (operator === ">=") {
+            table[i][excessVarIndex++] = -1; // Variable de exceso
+            table[i][artificialVarIndex++] = 1; // Variable artificial
+        } else if (operator === "=") {
+            table[i][artificialVarIndex++] = 1; // Variable artificial
         }
 
-        table[i][numVars + numSlackVars + numExcessVars] = rightSide;
+        table[i][table[0].length - 1] = rightSide;
     }
 
-    const objectiveCoefficients = objective.split(/[+-]/).map(term => {
-        const parts = term.trim().split(" ");
-        const coefficient = parseFloat(parts[0] || 1);
-        return type === "max" ? -coefficient : coefficient; 
-    });
+    if (isPhaseOne) {
+        // En la Fase 1, se minimiza la suma de las variables artificiales
+        for (let j = 0; j < numArtificialVars; j++) {
+            table[numConstraints][artificialVarIndex - numArtificialVars + j] = 1; // Coeficientes de variables artificiales en la función objetivo auxiliar
+        }
+    } else {
+        // Fase 2: Se usa la función objetivo original
+        const objectiveCoefficients = objective.match(/[+-]?\d*(?:\.\d+)?[a-zA-Z]\d*/g).map(term => {
+            const coeffMatch = term.match(/[+-]?\d+(?:\.\d+)?/);
+            const coefficient = coeffMatch ? parseFloat(coeffMatch[0]) : 1;
+            return type === "max" ? -coefficient : coefficient;
+        });
 
-    for (let j = 0; j < numVars; j++) {
-        table[numConstraints][j] = objectiveCoefficients[j] || 0;
+        for (let j = 0; j < numVars; j++) {
+            table[numConstraints][j] = objectiveCoefficients[j] || 0;
+        }
     }
 
     return table;
 }
 
-function getVariableNames(objective, constraints) {
-    const allVars = new Set(); // Usar un Set para evitar duplicados
+// Otras funciones como pivot, findPivotRow, findPivotColumn, etc., se mantienen igual
 
-    // Extraer variables de la función objetivo
-    const objectiveVars = objective.match(/[a-zA-Z]\d*/g) || []; 
+
+
+function getVariableNames(objective, constraints) {
+    const allVars = new Set();
+
+    const objectiveVars = objective.match(/[a-zA-Z](?:\d+)?/g) || []; // Modificación aquí
     objectiveVars.forEach(varName => allVars.add(varName));
 
-    // Extraer variables de las restricciones
     constraints.forEach(constraint => {
-        const constraintVars = constraint.match(/[a-zA-Z]\d*/g) || [];
+        const constraintVars = constraint.match(/[a-zA-Z](?:\d+)?/g) || []; // Modificación aquí
         constraintVars.forEach(varName => allVars.add(varName));
     });
 
-    return Array.from(allVars); // Convertir el Set en un array
+    return Array.from(allVars);
 }
+
 
 function printTable(table) {
     let output = '';
@@ -199,63 +267,34 @@ function pivot(table, pivotRow, pivotColumn) {
     const newTable = table.map(row => row.slice());
     const pivotValue = table[pivotRow][pivotColumn];
 
-    newTable[pivotRow] = newTable[pivotRow].map(val => val / pivotValue);
+    for (let j = 0; j < newTable[pivotRow].length; j++) {
+        newTable[pivotRow][j] /= pivotValue;
+    }
 
-    for (let i = 0; i < table.length; i++) {
+    for (let i = 0; i < newTable.length; i++) {
         if (i !== pivotRow) {
             const factor = table[i][pivotColumn];
-            for (let j = 0; j < table[0].length; j++) {
-                newTable[i][j] = table[i][j] - factor * newTable[pivotRow][j];
+            for (let j = 0; j < newTable[i].length; j++) {
+                newTable[i][j] -= factor * newTable[pivotRow][j];
             }
         }
     }
-
     return newTable;
 }
 
 function getOptimalResult(table) {
-    const numRows = table.length;
-    const numCols = table[0].length;
-    const result = {};
-    
-    // Busca las variables básicas y no básicas
-    for (let j = 0; j < numCols - 1; j++) {
-        let sum = 0;
-        let pivotRow = -1;
+    const lastRow = table[table.length - 1];
+    const optimalValue = lastRow[lastRow.length - 1];
 
-        for (let i = 0; i < numRows - 1; i++) {
-            if (table[i][j] === 1) {
-                if (pivotRow === -1) {
-                    pivotRow = i;
-                } else {
-                    pivotRow = -1;
-                    break;
-                }
-            } else if (table[i][j] !== 0) {
-                pivotRow = -1;
-                break;
-            }
-        }
+    let result = `Valor óptimo: ${optimalValue.toFixed(2)}\n`;
 
-        if (pivotRow !== -1) {
-            // Si es una variable básica, obtener su valor
-            result[`x${j + 1}`] = table[pivotRow][numCols - 1];
-        } else {
-            // Si es una variable no básica, su valor es 0
-            result[`x${j + 1}`] = 0;
+    for (let i = 0; i < table[0].length - 1; i++) {
+        if (table.some(row => row[i] === 1)) {
+            const value = table.find(row => row[i] === 1)[table[0].length - 1];
+            result += `x${i + 1} = ${value.toFixed(2)}\n`;
         }
     }
-
-    // Obtén el valor óptimo (última fila, última columna)
-    const optimalValue = table[numRows - 1][numCols - 1];
-
-    // Construye el resultado
-    let output = `Valor óptimo: ${optimalValue.toFixed(2)}\n`;
-    for (let variable in result) {
-        output += `${variable} = ${result[variable].toFixed(2)}\n`;
-    }
-
-    return output;
+    return result;
 }
 
 
