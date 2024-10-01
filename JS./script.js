@@ -21,15 +21,8 @@ document.getElementById("simplexForm").addEventListener("submit", function (even
 });
 
 function sanitizeInput(input) {
-    // Reemplazar caracteres "≤" por "<=" y "≥" por ">="
-    input = input.replace(/≤/g, '<=');
-    input = input.replace(/≥/g, '>=');
-    // Eliminar espacios en blanco
-    return input.replace(/\s+/g, ''); 
+    return input.replace(/\s+/g, ''); // Elimina todos los espacios en blanco
 }
-
-// El resto del código permanece igual
-
 
 // Función principal para resolver Simplex en dos fases
 function solveSimplex(objective, constraints, type) {
@@ -286,12 +279,12 @@ function getOptimalResult(table) {
     const lastRow = table[table.length - 1];
     const optimalValue = lastRow[lastRow.length - 1];
 
-    let result = `Valor óptimo: ${optimalValue.toFixed(2)}\n`;
+    let result = `Valor óptimo: ${optimalValue.toFixed(2)}\n`; // Corrección aquí
 
     for (let i = 0; i < table[0].length - 1; i++) {
         if (table.some(row => row[i] === 1)) {
             const value = table.find(row => row[i] === 1)[table[0].length - 1];
-            result += `x${i + 1} = ${value.toFixed(2)}\n`;
+            result += `x${i + 1} = ${value.toFixed(2)}\n`; // Corrección aquí
         }
     }
     return result;
