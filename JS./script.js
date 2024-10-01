@@ -91,7 +91,7 @@ function createInitialTable(objective, constraints, type) {
         }
 
         const constraintLower = constraint.toLowerCase();
-        const constraintParts = constraintLower.split(/[<=]+|>=+|=+/); 
+        const constraintParts = constraintLower.split(/[≤=]+|>=+/); 
 
         if (constraintParts.length < 2) {
             throw new Error("Error al procesar la restricción en la posición: " + (i + 1));
@@ -113,7 +113,7 @@ function createInitialTable(objective, constraints, type) {
             table[i][j] = varCoefficients[j] || 0;
         }
 
-        if (constraint.includes("<=")) {
+        if (constraint.includes("≤") || constraint.includes("<=")) {
             table[i][slackVarIndex++] = 1;
         } else if (constraint.includes(">=")) {
             table[i][excessVarIndex++] = -1;
@@ -259,7 +259,6 @@ function getOptimalResult(table) {
 
     return result;
 }
-
 
 
 
