@@ -214,51 +214,48 @@ function pivot(table, pivotRow, pivotColumn) {
 }
 
 function getOptimalResult(table) {
-    const lastRow = table[table.length - 1];
-    const numVars = (lastRow.length - 1) / 2; // Número de variables originales (sin holgura)
+    const numRows = table.length;
+    const numCols = table[0].length;
+    const result = {};
+    
+    // Busca las variables básicas y no básicas
+    for (let j = 0; j < numCols - 1; j++) {
+        let sum = 0;
+        let pivotRow = -1;
 
-    let optimalValue = lastRow[lastRow.length - 1];
-
-    // Ajustar el valor óptimo si la función objetivo fue negada en la tabla inicial (maximización)
-    if (table[table.length - 1][0] === 1) {
-        optimalValue = -optimalValue; 
-    }
-
-    let result = "Valor óptimo: " + optimalValue.toFixed(2) + "\n";
-
-    // Encontrar los valores de las variables originales
-    for (let i = 0; i < numVars; i++) {
-        let variableValue = 0;
-        let isBasic = false;
-
-        for (let j = 0; j < table.length - 1; j++) {
-            if (table[j][i] === 1) { 
-                // Verificar si la variable es básica (1 en su columna y 0 en las demás de originales)
-                let isBasicCandidate = true;
-                for (let k = 0; k < numVars; k++) {
-                    if (k !== i && table[j][k] !== 0) {
-                        isBasicCandidate = false;
-                        break;
-                    }
-                }
-
-                if (isBasicCandidate) {
-                    variableValue = table[j][table[0].length - 1];
-                    isBasic = true;
+        for (let i = 0; i < numRows - 1; i++) {
+            if (table[i][j] === 1) {
+                if (pivotRow === -1) {
+                    pivotRow = i;
+                } else {
+                    pivotRow = -1;
                     break;
                 }
+            } else if (table[i][j] !== 0) {
+                pivotRow = -1;
+                break;
             }
         }
 
-        if (isBasic) {
-            result += `x${i + 1} = ${variableValue.toFixed(2)}\n`;
+        if (pivotRow !== -1) {
+            // Si es una variable básica, obtener su valor
+            result[`x${j + 1}`] = table[pivotRow][numCols - 1];
         } else {
-            result += `x${i + 1} = 0\n`; 
+            // Si es una variable no básica, su valor es 0
+            result[`x${j + 1}`] = 0;
         }
     }
 
-    return result;
-}
+    // Obtén el valor óptimo (última fila, última columna)
+    const optimalValue = table[numRows - 1][numCols - 1];
 
+    // Construye el resultado
+    let output = `Valor óptimo: ${optimalValue.toFixed(2)}\n`;
+    for (let variable in result) {
+        output += `${variable} = ${result[variable].toFixed(2)}\n`;
+    }
+
+    return output;
+}
 
 
