@@ -20,9 +20,16 @@ document.getElementById("simplexForm").addEventListener("submit", function (even
     }
 });
 
+// ... (resto del código sin cambios)
+
 function sanitizeInput(input) {
+    // Reemplazar "≤" por "<=" y "≥" por ">="
+    input = input.replace(/≤/g, "<="); 
+    input = input.replace(/≥/g, ">=");
     return input.replace(/\s+/g, ''); // Elimina todos los espacios en blanco
 }
+
+// ... (resto del código sin cambios)
 
 // Función principal para resolver Simplex en dos fases
 function solveSimplex(objective, constraints, type) {
