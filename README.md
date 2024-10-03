@@ -41,9 +41,9 @@ Estructura del proyecto
         * `script.js` - Lógica del método Simplex y la interacción con la UI
     * `index.html` - Estructura HTML principal
 
-Equipo
-Eduardo P Cabrera Rendon
-Roberto Martin Gomez
-Jose A Mayo Dominguez
-Sofia G Peña Polanco
+## Equipo
 
+* Eduardo P Cabrera Rendón
+* Roberto Martínez Gómez 
+* Jose A Mayo Domínguez
+* Sofia G Perea Polanco
