@@ -22,7 +22,7 @@ La aplicación permite al usuario ingresar una función objetivo y varias restri
    ```bash
    git clone https://github.com/Roberstxx07/M-todo-simplex---Programa.git
 
-2 Abre el archivo index.html en cualquier navegador.
+2. Abre el archivo index.html en cualquier navegador.
 Uso
 Ingresa las variables de decisión en el campo correspondiente. Ejemplo: x1, x2
 Ingresa la función objetivo en el campo de texto, una por línea. Ejemplo: 3x1 + 2x2.
