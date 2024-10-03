@@ -20,4 +20,4 @@ La aplicación permite al usuario ingresar una función objetivo y varias restri
 
 1. Clona este repositorio en tu máquina local:
    ```bash
-   git clone [se quitó una URL no válida]
+   git clone https://github.com/Roberstxx07/M-todo-simplex---Programa.git
