@@ -27,7 +27,7 @@ Para ejecutar este proyecto solo necesitas un navegador moderno.
 
 # Instalación
 Clona este repositorio en tu máquina local:
-git clone [https://github.com/tu_usuario/SimplexSolverProject.git](https://github.com/Roberstxx07/M-todo-simplex---Programa.git)
+git clone https://github.com/Roberstxx07/M-todo-simplex---Programa.git
 Navega al directorio del proyecto:
 cd SimplexSolverProject
 Abra index.htmlsu navegador para ejecutar la aplicación.
