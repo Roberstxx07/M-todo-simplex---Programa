@@ -21,7 +21,6 @@ SimplexSolverProject/
 │   └── script.js          # Lógica del método Simplex y la interacción con la UI
 ├── index.html             # Estructura HTML principal
 ├── README.md              # Archivo de documentación
-└── .gitignore             # Opcional, para ignorar archivos innecesarios en GitHub
 
 Para ejecutar este proyecto solo necesitas un navegador moderno.
 
