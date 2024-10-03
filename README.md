@@ -30,7 +30,6 @@ La aplicación permite al usuario ingresar una función objetivo y varias restri
 4. Selecciona si deseas maximizar o minimizar la función objetivo.
 5. Presiona el botón "Resolver" y se mostrarán los pasos intermedios del método Simplex junto con el resultado final del problema.
 
-Estructura del proyecto
 
 ## Estructura del proyecto
 
