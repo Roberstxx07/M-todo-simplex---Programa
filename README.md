@@ -39,3 +39,10 @@ x1 + x2 <= 10
 2x1 + 3x2 <= 20
 3- Selecciona si deseas maximizar o minimizar la función objetivo.
 4- Presione el botón "Resolver" y se mostrarán los pasos intermedios del método Simplex junto con el resultado final.
+
+#Miembros del Equipo
+
+Eduardo Cabrera
+Roberto Martín Gomez
+José Mayo
+Sofía Peña
