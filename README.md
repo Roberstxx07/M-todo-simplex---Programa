@@ -23,12 +23,12 @@ La aplicación permite al usuario ingresar una función objetivo y varias restri
    git clone https://github.com/Roberstxx07/M-todo-simplex---Programa.git
 
 2. Abre el archivo index.html en cualquier navegador.
-##Uso
-**Ingresa las variables de decisión en el campo correspondiente. Ejemplo: x1, x2
-**Ingresa la función objetivo en el campo de texto, una por línea. Ejemplo: 3x1 + 2x2.
-**Ingresa las restricciones en el campo de texto, una por línea. Ejemplo: 2x1 + x2 <= 4.
-**Selecciona si deseas maximizar o minimizar la función objetivo.
-**Presiona el botón "Resolver" y se mostrarán los pasos intermedios del método Simplex junto con el resultado final del problema.
+## Uso
+1. Ingresa las variables de decisión en el campo correspondiente. Ejemplo: x1, x2
+2. Ingresa la función objetivo en el campo de texto, una por línea. Ejemplo: 3x1 + 2x2.
+3. Ingresa las restricciones en el campo de texto, una por línea. Ejemplo: 2x1 + x2 <= 4.
+4. Selecciona si deseas maximizar o minimizar la función objetivo.
+5. Presiona el botón "Resolver" y se mostrarán los pasos intermedios del método Simplex junto con el resultado final del problema.
 
 Estructura del proyecto
 
