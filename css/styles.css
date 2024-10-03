@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: hsl(155, 79%, 58%);
     margin: 0;
     padding: 0;
     display: flex;
@@ -10,38 +10,51 @@ body {
 }
 
 .container {
-    background: white;
-    padding: 20px;
+    background: rgb(243, 233, 233);
+    padding: 25px; /* Aumenta el espacio interno */
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 400px;
+    /*width: 300px; height: 420px;*/
+     width: 450px; /* Aumenta el ancho del contenedor */
+     /*margin-right: 5px;
 }
 
+
 h1 {
-    font-size: 24px;
+    font-size: 26px; /* Aumenta el tamaño del título */
     margin-bottom: 20px;
     text-align: center;
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px; /* Aumenta el espacio entre los grupos de formularios */
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px; /* Más espacio entre etiqueta y campo */
 }
 
 .form-group input, .form-group textarea, .form-group select {
-    width: 100%;
-    padding: 10px;
+    width: 80%;
+    padding: 12px; /* Aumenta el tamaño del área de entrada */
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 16px; /* Aumenta el tamaño del texto en las entradas */
+}
+
+#objective {
+    height: 40px; /* Aumenta la altura específica para la función objetivo */
+}
+
+#constraints {
+    height: 150px; /* Aumenta la altura del área de restricciones */
 }
 
 button {
     width: 100%;
-    padding: 10px;
+    padding: 15px; /* Aumenta el tamaño del botón */
+    font-size: 18px; /* Aumenta el tamaño del texto en el botón */
     background-color: #28a745;
     color: white;
     border: none;
@@ -73,5 +86,3 @@ pre {
     white-space: pre-wrap;
     word-wrap: break-word;
 }
-
-
