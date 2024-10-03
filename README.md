@@ -32,12 +32,14 @@ Presiona el botón "Resolver" y se mostrarán los pasos intermedios del método 
 
 Estructura del proyecto
 
-SimplexSolverProject/
-├── css/
-│   └── styles.css        # Estilos CSS para la interfaz de usuario
-├── js/
-│   └── script.js         # Lógica del método Simplex y la interacción con la UI
-└── index.html            # Estructura HTML principal
+## Estructura del proyecto
+
+* `SimplexSolverProject/`
+    * `css/`
+        * `styles.css` - Estilos CSS para la interfaz de usuario
+    * `js/`
+        * `script.js` - Lógica del método Simplex y la interacción con la UI
+    * `index.html` - Estructura HTML principal
 
 Equipo
 Eduardo P Cabrera Rendon
