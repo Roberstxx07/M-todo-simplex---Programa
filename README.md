@@ -31,6 +31,7 @@ Selecciona si deseas maximizar o minimizar la función objetivo.
 Presiona el botón "Resolver" y se mostrarán los pasos intermedios del método Simplex junto con el resultado final del problema.
 
 Estructura del proyecto
+
 SimplexSolverProject/
 ├── css/
 │   └── styles.css        # Estilos CSS para la interfaz de usuario
