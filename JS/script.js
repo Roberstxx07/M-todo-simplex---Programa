@@ -1,3 +1,10 @@
+/**
+ * Este script implementa la lógica del método Simplex para resolver problemas de programación lineal.
+ * 
+ * 
+ * Fecha: 2024-10-03
+ */
+
 document.getElementById("simplexForm").addEventListener("submit", function (event) {
     event.preventDefault();
 
@@ -20,7 +27,7 @@ document.getElementById("simplexForm").addEventListener("submit", function (even
     }
 });
 
-// ... (resto del código sin cambios)
+
 
 function sanitizeInput(input) {
     // Reemplazar "≤" por "<=" y "≥" por ">="
@@ -29,9 +36,13 @@ function sanitizeInput(input) {
     return input.replace(/\s+/g, ''); // Elimina todos los espacios en blanco
 }
 
-// ... (resto del código sin cambios)
+
 
 // Función principal para resolver Simplex en dos fases
+
+function calcularSimplex(variables, funcionObjetivo, restricciones, tipoOptimizacion) {
+    // ... código de la función ...
+  }
 function solveSimplex(objective, constraints, type) {
     let steps = "Función objetivo: " + objective + "\n";
     steps += "Restricciones:\n";
@@ -100,7 +111,7 @@ function solveSimplex(objective, constraints, type) {
     return steps;
 }
 
-// Función modificada para crear la tabla inicial, diferenciando Fase 1 y Fase 2
+// Función  para crear la tabla inicial, diferenciando Fase 1 y Fase 2
 function createInitialTable(objective, constraints, type, isPhaseOne) {
     const numVars = getVariableNames(objective, constraints).length; // Variables en la función objetivo
     const numConstraints = constraints.length;
@@ -200,9 +211,7 @@ function createInitialTable(objective, constraints, type, isPhaseOne) {
     return table;
 }
 
-// Otras funciones como pivot, findPivotRow, findPivotColumn, etc., se mantienen igual
-
-
+// Otras funciones como pivot, findPivotRow, findPivotColumn, etc., 
 
 function getVariableNames(objective, constraints) {
     const allVars = new Set();
@@ -296,4 +305,5 @@ function getOptimalResult(table) {
     }
     return result;
 }
+
 
